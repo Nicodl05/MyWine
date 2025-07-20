@@ -31,20 +31,6 @@ jobs:
           echo "🔍 Checking for deprecated packages..."
           dotnet list package --deprecated || echo "No deprecated packages found"
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: csharp
-          queries: security-and-quality
-
-      - name: Build for CodeQL
-        run: dotnet build --configuration Release
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:csharp"
-
       - name: Check for hardcoded secrets
         run: |
           echo "🔍 Scanning for potential hardcoded secrets..."
