@@ -1,0 +1,105 @@
+name: Build and Test
+
+on:
+  workflow_call:
+    outputs:
+      coverage-percentage:
+        description: "Coverage percentage"
+        value: ${{ jobs.build-test.outputs.coverage }}
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.coverage.outputs.percentage }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run unit tests with coverage
+        run: |
+          dotnet test \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger trx \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        run: |
+          reportgenerator \
+            -reports:"./TestResults/**/coverage.opencover.xml" \
+            -targetdir:"./CoverageReport" \
+            -reporttypes:"Html;TextSummary;Cobertura;JsonSummary" \
+            -verbosity:Info
+
+      - name: Extract coverage percentage
+        id: coverage
+        run: |
+          if [ -f "./CoverageReport/Summary.json" ]; then
+            COVERAGE=$(jq -r '.summary.linecoverage' ./CoverageReport/Summary.json)
+            echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+            echo "📊 Coverage: $COVERAGE%"
+          else
+            echo "percentage=0" >> $GITHUB_OUTPUT
+            echo "⚠️ No coverage report found"
+          fi
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-${{ github.sha }}
+          path: ./CoverageReport/
+          retention-days: 30
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ github.sha }}
+          path: ./TestResults/
+          retention-days: 30
+
+      - name: Check test results
+        if: always()
+        run: |
+          if [ -d "./TestResults" ]; then
+            echo "📋 Test results found:"
+            find ./TestResults -name "*.trx" -exec echo "  Found: {}" \;
+            
+            if find ./TestResults -name "*.trx" -exec grep -l "outcome=\"Failed\"" {} \; | grep -q .; then
+              echo "❌ Some tests failed!"
+              exit 1
+            else
+              echo "✅ All tests passed!"
+            fi
+          else
+            echo "❌ No test results found!"
+            exit 1
+          fi
