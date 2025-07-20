@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0F2E8462-3B97-407A-BD87-3EBDD540524B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WineCellar.Api", "src\WineCellar.Api\WineCellar.Api.csproj", "{5533AFC4-E5FB-41C8-BC91-C654052281F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WineCellar.Core", "src\WineCellar.Core\WineCellar.Core.csproj", "{78D6F0AA-F777-42E1-B448-30BAEF467467}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WineCellar.Infrastructure", "src\WineCellar.Infrastructure\WineCellar.Infrastructure.csproj", "{71E54A46-F54F-434A-AA80-67F57D5FDF20}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6052FEA2-005B-44DE-AB95-01C23D79EB49}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WineCellar.Tests", "tests\WineCellar.Tests\WineCellar.Tests.csproj", "{9655A4AC-E2CA-47AB-8B79-6C280D263A38}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5533AFC4-E5FB-41C8-BC91-C654052281F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5533AFC4-E5FB-41C8-BC91-C654052281F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5533AFC4-E5FB-41C8-BC91-C654052281F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5533AFC4-E5FB-41C8-BC91-C654052281F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78D6F0AA-F777-42E1-B448-30BAEF467467}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78D6F0AA-F777-42E1-B448-30BAEF467467}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78D6F0AA-F777-42E1-B448-30BAEF467467}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78D6F0AA-F777-42E1-B448-30BAEF467467}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71E54A46-F54F-434A-AA80-67F57D5FDF20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71E54A46-F54F-434A-AA80-67F57D5FDF20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71E54A46-F54F-434A-AA80-67F57D5FDF20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71E54A46-F54F-434A-AA80-67F57D5FDF20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9655A4AC-E2CA-47AB-8B79-6C280D263A38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9655A4AC-E2CA-47AB-8B79-6C280D263A38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9655A4AC-E2CA-47AB-8B79-6C280D263A38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9655A4AC-E2CA-47AB-8B79-6C280D263A38}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5533AFC4-E5FB-41C8-BC91-C654052281F1} = {0F2E8462-3B97-407A-BD87-3EBDD540524B}
+		{78D6F0AA-F777-42E1-B448-30BAEF467467} = {0F2E8462-3B97-407A-BD87-3EBDD540524B}
+		{71E54A46-F54F-434A-AA80-67F57D5FDF20} = {0F2E8462-3B97-407A-BD87-3EBDD540524B}
+		{9655A4AC-E2CA-47AB-8B79-6C280D263A38} = {6052FEA2-005B-44DE-AB95-01C23D79EB49}
+	EndGlobalSection
+EndGlobal
