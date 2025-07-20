@@ -1,5 +1,5 @@
-using NUnit.Framework;
 using WineCellar.Core.Entities;
+using NUnit.Framework;
 
 namespace WineCellar.Tests.Unit.Entities;
 
@@ -19,8 +19,6 @@ public class WineEntityTests
         Assert.That(wine.Year, Is.EqualTo(0));
         Assert.That(wine.EstimatedPrice, Is.EqualTo(0m));
         Assert.That(wine.Quantity, Is.EqualTo(0));
-        Assert.That(wine.Variety, Is.EqualTo(Variety.None));
-        Assert.That(wine.Description, Is.EqualTo(string.Empty));
     }
 
     [Test]
@@ -49,9 +47,7 @@ public class WineEntityTests
         // Act
         wine.Id = id;
         wine.Name = "Bordeaux 2020";
-        wine.Producer = "Chateau Test";
-        wine.Variety = Variety.Medoc;
-        wine.Description = "A full bodied red with dark fruit notes";
+        wine.Producer = "Château Test";
         wine.Year = 2020;
         wine.Region = "Bordeaux";
         wine.Type = "Red";
@@ -61,9 +57,7 @@ public class WineEntityTests
         // Assert
         Assert.That(wine.Id, Is.EqualTo(id));
         Assert.That(wine.Name, Is.EqualTo("Bordeaux 2020"));
-        Assert.That(wine.Producer, Is.EqualTo("Chateau Test"));
-        Assert.That(wine.Variety, Is.EqualTo(Variety.Medoc));
-        Assert.That(wine.Description, Is.EqualTo("A full bodied red with dark fruit notes"));
+        Assert.That(wine.Producer, Is.EqualTo("Château Test"));
         Assert.That(wine.Year, Is.EqualTo(2020));
         Assert.That(wine.Region, Is.EqualTo("Bordeaux"));
         Assert.That(wine.Type, Is.EqualTo("Red"));

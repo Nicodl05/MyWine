@@ -1,6 +1,5 @@
-using NUnit.Framework;
 using WineCellar.Core.Entities;
-
+using NUnit.Framework;
 namespace WineCellar.Tests.Unit.Entities;
 
 public class NoteTests

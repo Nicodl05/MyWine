@@ -40,10 +40,16 @@ public class WinesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<Wine>> UpdateWine(Guid id, Wine wine)
     {
-        if (id != wine.Id) return BadRequest("URL ID does not match wine ID.");
+        if (id != wine.Id)
+        {
+            return BadRequest("URL ID does not match wine ID.");
+        }
 
         var existingWine = await _wineRepository.GetByIdAsync(id);
-        if (existingWine == null) return NotFound($"Wine with ID {id} not found.");
+        if (existingWine == null)
+        {
+            return NotFound($"Wine with ID {id} not found.");
+        }
 
         try
         {

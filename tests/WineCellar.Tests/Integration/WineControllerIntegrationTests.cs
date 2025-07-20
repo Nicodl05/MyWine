@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using NUnit.Framework;
 using WineCellar.Api.Controllers;
 using WineCellar.Core.Entities;
 using WineCellar.Infrastructure.Repositories;
+using NUnit.Framework;
 
 namespace WineCellar.Tests.Integration;
 
@@ -95,13 +95,16 @@ public class WineControllerIntegrationTests
 
         var wines = new List<Wine>
         {
-            new() { Name = "Wine 1", EstimatedPrice = 20.00m, Quantity = 2 }, // 40
-            new() { Name = "Wine 2", EstimatedPrice = 15.50m, Quantity = 3 }, // 46.50
-            new() { Name = "Wine 3", EstimatedPrice = 30.00m, Quantity = 1 } // 30
+            new Wine { Name = "Wine 1", EstimatedPrice = 20.00m, Quantity = 2 }, // 40
+            new Wine { Name = "Wine 2", EstimatedPrice = 15.50m, Quantity = 3 }, // 46.50
+            new Wine { Name = "Wine 3", EstimatedPrice = 30.00m, Quantity = 1 }  // 30
         };
 
         // Act - Create wines
-        foreach (var wine in wines) await _controller.CreateWine(wine);
+        foreach (var wine in wines)
+        {
+            await _controller.CreateWine(wine);
+        }
 
         // Act - Get total value
         var totalResult = await _controller.GetTotalValue();
@@ -141,7 +144,9 @@ public class WineControllerIntegrationTests
 
         // Assert
         Assert.That(allWines!.Count(), Is.EqualTo(initialCount + 10));
-        for (var i = 1; i <= 10; i++)
+        for (int i = 1; i <= 10; i++)
+        {
             Assert.That(allWines, Has.Some.Matches<Wine>(w => w.Name == $"Concurrent Wine {i}"));
+        }
     }
 }
