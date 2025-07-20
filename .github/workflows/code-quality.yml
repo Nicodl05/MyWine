@@ -10,11 +10,11 @@ on:
         default: 80
 
 jobs:
-  code-analysis:
+  check-coverage:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -24,115 +24,51 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Download coverage report
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-report-${{ github.sha }}
-          path: ./CoverageReport
+      - name: Restore and build
+        run: |
+          dotnet restore
+          dotnet build --configuration Release
+
+      - name: Run tests with coverage
+        run: |
+          dotnet test \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger trx \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+      - name: Install tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y jq bc
+          dotnet tool install --global dotnet-reportgenerator-globaltool || true
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Generate coverage summary
+        run: |
+          reportgenerator \
+            -reports:"./TestResults/**/coverage.opencover.xml" \
+            -targetdir:"./CoverageReport" \
+            -reporttypes:JsonSummary \
+            -verbosity:Info
 
       - name: Check coverage threshold
+        id: coverage
         run: |
           if [ -f "./CoverageReport/Summary.json" ]; then
             COVERAGE=$(jq -r '.summary.linecoverage' ./CoverageReport/Summary.json)
-            echo "📊 Current coverage: ${COVERAGE}%"
-            echo "🎯 Required minimum: ${{ inputs.coverage-threshold }}%"
-            
-            if (( $(echo "$COVERAGE < ${{ inputs.coverage-threshold }}" | bc -l) )); then
-              echo "❌ Coverage insufficient: ${COVERAGE}% < ${{ inputs.coverage-threshold }}%"
+            echo "Current coverage: ${COVERAGE}%"
+            THRESHOLD=${{ inputs.coverage-threshold }}
+            if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+              echo "Coverage ${COVERAGE}% is below threshold ${THRESHOLD}%"
               exit 1
             else
-              echo "✅ Coverage sufficient: ${COVERAGE}% >= ${{ inputs.coverage-threshold }}%"
+              echo "Coverage ${COVERAGE}% meets threshold ${THRESHOLD}%"
             fi
           else
-            echo "❌ No coverage report found!"
+            echo "No coverage summary found"
             exit 1
           fi
-
-      - name: Analyze code complexity
-        run: |
-          echo "🔍 Analyzing code complexity..."
-
-          TOTAL_LINES=$(find src -name "*.cs" -exec wc -l {} + | tail -1 | awk '{print $1}')
-          echo "📏 Total lines of code: $TOTAL_LINES"
-
-          TOTAL_FILES=$(find src -name "*.cs" | wc -l)
-          echo "📁 Total C# files: $TOTAL_FILES"
-
-          if [ "$TOTAL_FILES" -gt 0 ]; then
-            AVG_LINES=$((TOTAL_LINES / TOTAL_FILES))
-            echo "📊 Average lines per file: $AVG_LINES"
-            
-            if [ "$AVG_LINES" -gt 200 ]; then
-              echo "⚠️ Warning: Average file size is large (>200 lines)"
-            fi
-          fi
-
-      - name: Check code patterns
-        run: |
-          echo "🔍 Checking for code smells..."
-
-          TODO_COUNT=$(find src -name "*.cs" -exec grep -l "TODO\|FIXME\|HACK" {} \; | wc -l)
-          echo "📝 Files with TODO/FIXME/HACK: $TODO_COUNT"
-
-          CONSOLE_COUNT=$(find src -name "*.cs" -exec grep -l "Console\.WriteLine\|console\.log" {} \; | wc -l)
-          if [ "$CONSOLE_COUNT" -gt 0 ]; then
-            echo "⚠️ Warning: Found $CONSOLE_COUNT files with console outputs"
-            find src -name "*.cs" -exec grep -l "Console\.WriteLine\|console\.log" {} \;
-          fi
-
-          echo "🔍 Checking for long methods..."
-          find src -name "*.cs" -exec awk '/^\s*public|^\s*private|^\s*protected/ {method_start=NR} /^\s*}/ {if (method_start && NR-method_start > 50) print FILENAME ":" method_start "-" NR " (long method)"; method_start=0}' {} \;
-
-  comment-pr:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    needs: code-analysis
-
-    steps:
-      - name: Download coverage report
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-report-${{ github.sha }}
-          path: ./CoverageReport
-
-      - name: Comment PR with coverage
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            try {
-              const summaryPath = './CoverageReport/Summary.json';
-              if (fs.existsSync(summaryPath)) {
-                const summaryData = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
-                const coverage = summaryData.summary.linecoverage;
-                const threshold = ${{ inputs.coverage-threshold }};
-                const status = coverage >= threshold ? '✅ Compliant' : '❌ Insufficient';
-                const emoji = coverage >= threshold ? '🎉' : '⚠️';
-                
-                const comment = `${emoji} ## 📊 Code Quality Report
-                
-                ### Coverage
-                **Current coverage**: ${coverage}%
-                **Minimum threshold**: ${threshold}%
-                **Status**: ${status}
-                
-                ### Metrics
-                - **Covered lines**: ${summaryData.summary.coveredlines}
-                - **Total lines**: ${summaryData.summary.lines}
-                - **Covered branches**: ${summaryData.summary.coveredbranches}/${summaryData.summary.branches}
-                
-                📈 [View detailed report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-                
-                ---
-                *Automatically generated by quality workflow*`;
-                
-                github.rest.issues.createComment({
-                  issue_number: context.issue.number,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: comment
-                });
-              }
-            } catch (error) {
-              console.log('Error creating comment:', error);
-            }
