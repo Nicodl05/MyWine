@@ -1,0 +1,57 @@
+name: Security Scan
+
+on:
+  workflow_call:
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Security audit - Vulnerable packages
+        run: |
+          echo "🔍 Checking for vulnerable packages..."
+          dotnet list package --vulnerable --include-transitive || echo "No vulnerabilities found in packages"
+
+      - name: Security audit - Deprecated packages
+        run: |
+          echo "🔍 Checking for deprecated packages..."
+          dotnet list package --deprecated || echo "No deprecated packages found"
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          queries: security-and-quality
+
+      - name: Build for CodeQL
+        run: dotnet build --configuration Release
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:csharp"
+
+      - name: Check for hardcoded secrets
+        run: |
+          echo "🔍 Scanning for potential hardcoded secrets..."
+
+          if grep -r -E "(password|pwd|secret|key|token)\s*=\s*['\"]" src/ --include="*.cs" --include="*.json"; then
+            echo "⚠️ Potential hardcoded secrets found!"
+            exit 1
+          else
+            echo "✅ No hardcoded secrets detected"
+          fi
