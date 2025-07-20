@@ -28,18 +28,19 @@ public class InMemoryWineRepository : IWineRepository
     public Task<Wine> UpdateAsync(Wine wine)
     {
         var existingWine = _wines.FirstOrDefault(w => w.Id == wine.Id);
-        if (existingWine != null)
+        if (existingWine == null)
         {
-            existingWine.Name = wine.Name;
-            existingWine.Producer = wine.Producer;
-            existingWine.Year = wine.Year;
-            existingWine.Region = wine.Region;
-            existingWine.Type = wine.Type;
-            existingWine.EstimatedPrice = wine.EstimatedPrice;
-            existingWine.Quantity = wine.Quantity;
-            existingWine.Notes = wine.Notes;
+            throw new KeyNotFoundException($"Wine with ID {wine.Id} not found.");
         }
-        return Task.FromResult(existingWine ?? wine);
+        existingWine.Name = wine.Name;
+        existingWine.Producer = wine.Producer;
+        existingWine.Year = wine.Year;
+        existingWine.Region = wine.Region;
+        existingWine.Type = wine.Type;
+        existingWine.EstimatedPrice = wine.EstimatedPrice;
+        existingWine.Quantity = wine.Quantity;
+        existingWine.Notes = wine.Notes;
+        return Task.FromResult(existingWine);
     }
 
     public Task DeleteAsync(Guid id)

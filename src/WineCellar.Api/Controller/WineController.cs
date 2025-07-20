@@ -41,20 +41,32 @@ public class WinesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateWine(Guid id, Wine wine)
+    public async Task<ActionResult<Wine>> UpdateWine(Guid id, Wine wine)
     {
         if (id != wine.Id)
         {
-            return BadRequest();
+            return BadRequest("L'ID dans l'URL ne correspond pas à l'ID du vin.");
         }
 
-        await _wineRepository.UpdateAsync(wine);
-        return NoContent();
+        var existingWine = await _wineRepository.GetByIdAsync(id);
+        if (existingWine == null)
+        {
+            return NotFound($"Vin avec l'ID {id} introuvable.");
+        }
+
+        var updatedWine = await _wineRepository.UpdateAsync(wine);
+        return Ok(updatedWine);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteWine(Guid id)
     {
+        var existingWine = await _wineRepository.GetByIdAsync(id);
+        if (existingWine == null)
+        {
+            return NotFound($"Vin avec l'ID {id} introuvable.");
+        }
+
         await _wineRepository.DeleteAsync(id);
         return NoContent();
     }
