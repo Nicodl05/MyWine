@@ -45,17 +45,24 @@ public class WinesController : ControllerBase
     {
         if (id != wine.Id)
         {
-            return BadRequest("L'ID dans l'URL ne correspond pas à l'ID du vin.");
+            return BadRequest("URL ID does not match wine ID.");
         }
 
         var existingWine = await _wineRepository.GetByIdAsync(id);
         if (existingWine == null)
         {
-            return NotFound($"Vin avec l'ID {id} introuvable.");
+            return NotFound($"Wine with ID {id} not found.");
         }
 
-        var updatedWine = await _wineRepository.UpdateAsync(wine);
-        return Ok(updatedWine);
+        try
+        {
+            var updatedWine = await _wineRepository.UpdateAsync(wine);
+            return Ok(updatedWine);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(500, $"Error updating wine: {ex.Message}");
+        }
     }
 
     [HttpDelete("{id}")]

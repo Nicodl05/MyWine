@@ -25,13 +25,14 @@ public class InMemoryWineRepository : IWineRepository
         return Task.FromResult(wine);
     }
 
-    public Task<Wine> UpdateAsync(Wine wine)
+    public async Task<Wine> UpdateAsync(Wine wine)
     {
         var existingWine = _wines.FirstOrDefault(w => w.Id == wine.Id);
         if (existingWine == null)
         {
-            throw new KeyNotFoundException($"Wine with ID {wine.Id} not found.");
+            throw new InvalidOperationException($"Wine with ID {wine.Id} not found");
         }
+
         existingWine.Name = wine.Name;
         existingWine.Producer = wine.Producer;
         existingWine.Year = wine.Year;
@@ -39,8 +40,9 @@ public class InMemoryWineRepository : IWineRepository
         existingWine.Type = wine.Type;
         existingWine.EstimatedPrice = wine.EstimatedPrice;
         existingWine.Quantity = wine.Quantity;
-        existingWine.Notes = wine.Notes;
-        return Task.FromResult(existingWine);
+        existingWine.Notes = wine.Notes ?? new List<Note>();
+
+        return await Task.FromResult(existingWine);
     }
 
     public Task DeleteAsync(Guid id)
