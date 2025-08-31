@@ -8,6 +8,10 @@ on:
         required: false
         type: number
         default: 80
+      coverage-percentage:
+        description: "Coverage percentage produced by build-test workflow"
+        required: false
+        type: number
 
 jobs:
   check-coverage:
@@ -24,51 +28,83 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Restore and build
+      - name: Ensure formatting with ReSharper Global Tool (or fallback to dotnet-format)
         run: |
-          dotnet restore
-          dotnet build --configuration Release
+          set -euo pipefail
+          echo "Installing ReSharper Global Tools as a dotnet global tool..."
+          RESHARPER_TOOL_VERSION="2025.2.0.1"
+          dotnet tool install --global JetBrains.ReSharper.GlobalTools --version "$RESHARPER_TOOL_VERSION" || true
+          export PATH="$HOME/.dotnet/tools:$PATH"
 
-      - name: Run tests with coverage
-        run: |
-          dotnet test \
-            --configuration Release \
-            --no-build \
-            --verbosity normal \
-            --collect:"XPlat Code Coverage" \
-            --results-directory ./TestResults \
-            --logger trx \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+          # Try several possible installers/entrypoints for ReSharper CLT
+          # Try the known ReSharper cleanup entrypoints and handle profile name differences.
+          FALLBACK=0
+          PROFILE_NAME="Built-in: Full cleanup"
 
-      - name: Install tools
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y jq bc
-          dotnet tool install --global dotnet-reportgenerator-globaltool || true
-          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-
-      - name: Generate coverage summary
-        run: |
-          reportgenerator \
-            -reports:"./TestResults/**/coverage.opencover.xml" \
-            -targetdir:"./CoverageReport" \
-            -reporttypes:JsonSummary \
-            -verbosity:Info
-
-      - name: Check coverage threshold
-        id: coverage
-        run: |
-          if [ -f "./CoverageReport/Summary.json" ]; then
-            COVERAGE=$(jq -r '.summary.linecoverage' ./CoverageReport/Summary.json)
-            echo "Current coverage: ${COVERAGE}%"
-            THRESHOLD=${{ inputs.coverage-threshold }}
-            if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
-              echo "Coverage ${COVERAGE}% is below threshold ${THRESHOLD}%"
-              exit 1
+          if command -v cleanupcode >/dev/null 2>&1; then
+            echo "Found cleanupcode binary - attempting with profile: $PROFILE_NAME"
+            if cleanupcode "WineCellar.sln" --profile="$PROFILE_NAME"; then
+              echo "cleanupcode ran with profile"
             else
-              echo "Coverage ${COVERAGE}% meets threshold ${THRESHOLD}%"
+              echo "cleanupcode with profile failed, trying cleanupcode without explicit profile"
+              if cleanupcode "WineCellar.sln"; then
+                echo "cleanupcode ran without profile"
+              else
+                echo "cleanupcode failed"
+                FALLBACK=1
+              fi
+            fi
+          elif command -v jb >/dev/null 2>&1; then
+            echo "Found 'jb' binary - attempting 'jb cleanupcode' with profile: $PROFILE_NAME"
+            if jb cleanupcode "WineCellar.sln" --profile="$PROFILE_NAME"; then
+              echo "jb cleanupcode ran with profile"
+            else
+              echo "jb cleanupcode with profile failed, trying jb cleanupcode without explicit profile"
+              if jb cleanupcode "WineCellar.sln"; then
+                echo "jb cleanupcode ran without profile"
+              else
+                echo "jb cleanupcode failed"
+                FALLBACK=1
+              fi
             fi
           else
-            echo "No coverage summary found"
+            echo "ReSharper cleanup not available as cleanupcode or jb; will fallback to dotnet-format"
+            FALLBACK=1
+          fi
+
+          if [ "$FALLBACK" -eq 1 ]; then
+            echo "Falling back to dotnet-format"
+            dotnet tool install --global dotnet-format --version 6.0.250901 || true
+            export PATH="$HOME/.dotnet/tools:$PATH"
+            dotnet format --verify-no-changes || true
+          fi
+
+          # If any files were changed by cleanup or dotnet-format, fail the job
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Code formatting changes are required. Please run the formatter locally and commit the results."
+            git --no-pager status --porcelain
+            git --no-pager --no-color diff
             exit 1
+          else
+            echo "Formatting check passed (no unstaged changes)."
+          fi
+
+
+
+      - name: Verify coverage threshold (from build-test)
+        run: |
+          set -euo pipefail
+          THRESHOLD=${{ inputs.coverage-threshold }}
+          COVERAGE_INPUT=${{ inputs.coverage-percentage }}
+          if [ -z "${COVERAGE_INPUT}" ] || [ "${COVERAGE_INPUT}" = "null" ]; then
+            echo "No coverage value provided to code-quality. Ensure build-test provides coverage output."
+            exit 1
+          fi
+          echo "Current coverage (from build): ${COVERAGE_INPUT}%"
+          # compare using bc
+          if (( $(echo "${COVERAGE_INPUT} < ${THRESHOLD}" | bc -l) )); then
+            echo "Coverage ${COVERAGE_INPUT}% is below threshold ${THRESHOLD}%"
+            exit 1
+          else
+            echo "Coverage ${COVERAGE_INPUT}% meets threshold ${THRESHOLD}%"
           fi

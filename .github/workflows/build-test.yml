@@ -5,13 +5,13 @@ on:
     outputs:
       coverage-percentage:
         description: "Coverage percentage"
-        value: ${{ jobs.build-test.outputs.coverage }}
+        value: ${{ jobs.build-test.outputs['coverage-percentage'] }}
 
 jobs:
   build-test:
     runs-on: ubuntu-latest
     outputs:
-      coverage: ${{ steps.coverage.outputs.percentage }}
+      coverage-percentage: ${{ steps.coverage.outputs.percentage }}
 
     steps:
       - name: Checkout code
