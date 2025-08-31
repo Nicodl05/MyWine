@@ -182,7 +182,7 @@ public class WinesControllerTests
         Assert.That(result.Result, Is.TypeOf<ObjectResult>());
         var objResult = (ObjectResult)result.Result;
         Assert.That(objResult.StatusCode, Is.EqualTo(500));
-    Assert.That(objResult.Value?.ToString(), Does.Contain("Error updating wine"));
+        Assert.That(objResult.Value?.ToString(), Does.Contain("Error updating wine"));
     }
 
     [Test]
