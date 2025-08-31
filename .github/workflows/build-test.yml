@@ -64,10 +64,10 @@ jobs:
           if [ -f "./CoverageReport/Summary.json" ]; then
             COVERAGE=$(jq -r '.summary.linecoverage' ./CoverageReport/Summary.json)
             echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
-            echo "📊 Coverage: $COVERAGE%"
+              echo "Coverage: $COVERAGE%"
           else
             echo "percentage=0" >> $GITHUB_OUTPUT
-            echo "⚠️ No coverage report found"
+              echo "No coverage report found"
           fi
 
       - name: Upload coverage reports
@@ -94,12 +94,12 @@ jobs:
             find ./TestResults -name "*.trx" -exec echo "  Found: {}" \;
             
             if find ./TestResults -name "*.trx" -exec grep -l "outcome=\"Failed\"" {} \; | grep -q .; then
-              echo "❌ Some tests failed!"
+                echo "Some tests failed!"
               exit 1
             else
-              echo "✅ All tests passed!"
+                echo "All tests passed!"
             fi
           else
-            echo "❌ No test results found!"
+              echo "No test results found!"
             exit 1
           fi
