@@ -3,6 +3,146 @@ name: Code Quality
 on:
   workflow_call:
     inputs:
+    name: Code Quality
+
+    on:
+      workflow_call:
+        inputs:
+          coverage-threshold:
+            description: "Minimum coverage percentage required"
+            required: false
+            type: number
+            default: 80
+          coverage-percentage:
+            description: "Coverage percentage produced by build-test workflow"
+            required: false
+            type: number
+
+    jobs:
+      check-quality:
+        runs-on: ubuntu-latest
+
+        steps:
+          - name: Checkout repository
+            uses: actions/checkout@v4
+            with:
+              fetch-depth: 0
+
+          - name: Setup .NET
+            uses: actions/setup-dotnet@v4
+            with:
+              dotnet-version: "8.0.x"
+
+          - name: Install helper packages
+            run: |
+              sudo apt-get update -y
+              sudo apt-get install -y jq bc coreutils
+              echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+          - name: Ensure formatting with ReSharper (timeout + fallback)
+            run: |
+              set -euo pipefail
+              export PATH="$HOME/.dotnet/tools:$PATH"
+
+              # Install ReSharper Global Tools if not present (non-fatal)
+              RESHARPER_TOOL_VERSION="2025.2.0.1"
+              dotnet tool install --global JetBrains.ReSharper.GlobalTools --version "$RESHARPER_TOOL_VERSION" || true
+              export PATH="$HOME/.dotnet/tools:$PATH"
+
+              # Run cleanup with timeout to avoid hangs
+              TIMEOUT_SECONDS=300
+              FALLBACK=0
+
+              if command -v cleanupcode >/dev/null 2>&1; then
+                echo "Found cleanupcode - running with timeout ${TIMEOUT_SECONDS}s"
+                if timeout ${TIMEOUT_SECONDS} cleanupcode "WineCellar.sln"; then
+                  echo "cleanupcode completed"
+                else
+                  echo "cleanupcode failed or timed out"
+                  FALLBACK=1
+                fi
+              elif command -v jb >/dev/null 2>&1; then
+                echo "Found jb - running jb cleanupcode with timeout ${TIMEOUT_SECONDS}s"
+                if timeout ${TIMEOUT_SECONDS} jb cleanupcode "WineCellar.sln"; then
+                  echo "jb cleanupcode completed"
+                else
+                  echo "jb cleanupcode failed or timed out"
+                  FALLBACK=1
+                fi
+              else
+                echo "cleanupcode/jb not found; will fallback to dotnet-format"
+                FALLBACK=1
+              fi
+
+              if [ "$FALLBACK" -eq 1 ]; then
+                echo "Running dotnet-format as fallback (verify-no-changes)"
+                dotnet tool install --global dotnet-format --version 6.0.250901 || true
+                export PATH="$HOME/.dotnet/tools:$PATH"
+                dotnet format --verify-no-changes || true
+              fi
+
+              # If formatting changes are present, fail the job
+              if [ -n "$(git status --porcelain)" ]; then
+                echo "Formatting changes detected. Please run the formatter locally and commit the changes."
+                git --no-pager status --porcelain
+                git --no-pager --no-color diff
+                exit 1
+              fi
+
+          - name: Verify coverage threshold (from build-test)
+            run: |
+              set -euo pipefail
+              THRESHOLD=${{ inputs.coverage-threshold }}
+              COVERAGE_INPUT=${{ inputs.coverage-percentage }}
+              if [ -z "${COVERAGE_INPUT}" ] || [ "${COVERAGE_INPUT}" = "null" ]; then
+                echo "No coverage value provided to code-quality. Ensure build-test provides coverage output."
+                exit 1
+              fi
+              echo "Current coverage (from build): ${COVERAGE_INPUT}%"
+              if (( $(echo "${COVERAGE_INPUT} < ${THRESHOLD}" | bc -l) )); then
+                echo "Coverage ${COVERAGE_INPUT}% is below threshold ${THRESHOLD}%"
+                exit 1
+              else
+                echo "Coverage ${COVERAGE_INPUT}% meets threshold ${THRESHOLD}%"
+              fi
+          if [ -z "${COVERAGE_INPUT}" ] || [ "${COVERAGE_INPUT}" = "null" ]; then
+            echo "No coverage value provided to code-quality. Ensure build-test provides coverage output."
+            exit 1
+          fi
+          echo "Current coverage (from build): ${COVERAGE_INPUT}%"
+          if (( $(echo "${COVERAGE_INPUT} < ${THRESHOLD}" | bc -l) )); then
+            echo "Coverage ${COVERAGE_INPUT}% is below threshold ${THRESHOLD}%"
+            exit 1
+          else
+            echo "Coverage ${COVERAGE_INPUT}% meets threshold ${THRESHOLD}%"
+          fi
+  - name: Run cleanup code
+        run: |
+          if command -v cleanupcode >/dev/null 2>&1; then
+            echo "Found cleanupcode binary - running without explicit profile"
+            if cleanupcode "WineCellar.sln"; then
+              echo "cleanupcode ran successfully"
+            else
+              echo "cleanupcode failed"
+              FALLBACK=1
+            fi
+          elif command -v jb >/dev/null 2>&1; then
+            echo "Found 'jb' binary - running 'jb cleanupcode' without explicit profile"
+            if jb cleanupcode "WineCellar.sln"; then
+              echo "jb cleanupcode ran successfully"
+            else
+              echo "jb cleanupcode failed"
+              FALLBACK=1
+            fi
+          else
+            echo "ReSharper cleanup not available as cleanupcode or jb; will fallback to dotnet-format"
+            FALLBACK=1
+          fi
+name: Code Quality
+
+on:
+  workflow_call:
+    inputs:
       coverage-threshold:
         description: "Minimum coverage percentage required"
         required: false

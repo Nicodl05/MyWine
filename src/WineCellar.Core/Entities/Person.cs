@@ -14,5 +14,5 @@ public class Person
     public string PasswordHash { get; set; } = string.Empty;
 
     // Preferred grape varieties (use strings to avoid needing a separate Variety entity).
-    public List<Variety> PreferredVarieties { get; set; } = new List<Variety>();
+    public List<Variety> PreferredVarieties { get; set; } = new();
 }

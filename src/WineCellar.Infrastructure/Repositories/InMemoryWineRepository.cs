@@ -28,10 +28,7 @@ public class InMemoryWineRepository : IWineRepository
     public async Task<Wine> UpdateAsync(Wine wine)
     {
         var existingWine = _wines.FirstOrDefault(w => w.Id == wine.Id);
-        if (existingWine == null)
-        {
-            throw new InvalidOperationException($"Wine with ID {wine.Id} not found");
-        }
+        if (existingWine == null) throw new InvalidOperationException($"Wine with ID {wine.Id} not found");
 
         existingWine.Name = wine.Name;
         existingWine.Producer = wine.Producer;
@@ -48,10 +45,7 @@ public class InMemoryWineRepository : IWineRepository
     public Task DeleteAsync(Guid id)
     {
         var wine = _wines.FirstOrDefault(w => w.Id == id);
-        if (wine != null)
-        {
-            _wines.Remove(wine);
-        }
+        if (wine != null) _wines.Remove(wine);
         return Task.CompletedTask;
     }
 
