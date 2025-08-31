@@ -11,6 +11,6 @@ public class Wine
     public decimal EstimatedPrice { get; set; }
     public int Quantity { get; set; }
     public List<Note> Notes { get; set; } = new();
-    public string Variety { get; set; } = string.Empty; // grape variety
+    public Variety Variety { get; set; } = Variety.None; // grape variety
     public string Description { get; set; } = string.Empty; // free text description
 }

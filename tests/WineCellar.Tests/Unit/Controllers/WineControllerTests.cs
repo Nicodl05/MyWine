@@ -165,6 +165,27 @@ public class WinesControllerTests
     }
 
     [Test]
+    public async Task UpdateWine_WhenRepositoryThrows_ReturnsInternalServerError()
+    {
+        // Arrange
+        var wineId = Guid.NewGuid();
+        var existingWine = new Wine { Id = wineId, Name = "Old Wine" };
+        var updatedWine = new Wine { Id = wineId, Name = "Updated Wine" };
+
+        _mockRepository.Setup(repo => repo.GetByIdAsync(wineId)).ReturnsAsync(existingWine);
+        _mockRepository.Setup(repo => repo.UpdateAsync(updatedWine)).ThrowsAsync(new InvalidOperationException("simulated"));
+
+        // Act
+        var result = await _controller.UpdateWine(wineId, updatedWine);
+
+        // Assert
+        Assert.That(result.Result, Is.TypeOf<ObjectResult>());
+        var objResult = (ObjectResult)result.Result;
+        Assert.That(objResult.StatusCode, Is.EqualTo(500));
+    Assert.That(objResult.Value?.ToString(), Does.Contain("Error updating wine"));
+    }
+
+    [Test]
     public async Task DeleteWine_WithExistingId_ReturnsNoContent()
     {
         // Arrange

@@ -1,7 +1,5 @@
 # MyWine - Wine Cellar Management Application
 
-[![CI/CD Pipeline](https://github.com/VOTRE-USERNAME/MyWine/actions/workflows/ci.yml/badge.svg)](https://github.com/VOTRE-USERNAME/MyWine/actions/workflows/ci.yml)
-
 ## Description
 
 Wine cellar management and tracking application with price scraping and personalized recommendations.

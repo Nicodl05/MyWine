@@ -19,7 +19,7 @@ public class WineEntityTests
         Assert.That(wine.Year, Is.EqualTo(0));
         Assert.That(wine.EstimatedPrice, Is.EqualTo(0m));
         Assert.That(wine.Quantity, Is.EqualTo(0));
-        Assert.That(wine.Variety, Is.EqualTo(string.Empty));
+        Assert.That(wine.Variety, Is.EqualTo(Variety.None));
         Assert.That(wine.Description, Is.EqualTo(string.Empty));
     }
 
@@ -50,7 +50,7 @@ public class WineEntityTests
         wine.Id = id;
         wine.Name = "Bordeaux 2020";
         wine.Producer = "Chateau Test";
-        wine.Variety = "Médoc";
+        wine.Variety = Variety.Medoc;
         wine.Description = "A full bodied red with dark fruit notes";
         wine.Year = 2020;
         wine.Region = "Bordeaux";
@@ -62,7 +62,7 @@ public class WineEntityTests
         Assert.That(wine.Id, Is.EqualTo(id));
         Assert.That(wine.Name, Is.EqualTo("Bordeaux 2020"));
         Assert.That(wine.Producer, Is.EqualTo("Chateau Test"));
-        Assert.That(wine.Variety, Is.EqualTo("Médoc"));
+        Assert.That(wine.Variety, Is.EqualTo(Variety.Medoc));
         Assert.That(wine.Description, Is.EqualTo("A full bodied red with dark fruit notes"));
         Assert.That(wine.Year, Is.EqualTo(2020));
         Assert.That(wine.Region, Is.EqualTo("Bordeaux"));
