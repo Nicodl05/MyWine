@@ -23,6 +23,7 @@ jobs:
     secrets: inherit
     with:
       coverage-threshold: 80
+      coverage-percentage: ${{ needs.build-and-test.outputs['coverage-percentage'] }}
 
   security:
     name: Security Scan

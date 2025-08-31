@@ -1,16 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using NUnit.Framework;
 using WineCellar.Api.Controllers;
 using WineCellar.Core.Entities;
 using WineCellar.Core.Interfaces;
-using NUnit.Framework;
 
 namespace WineCellar.Tests.Unit.Controllers;
 
 public class WinesControllerTests
 {
-    private Mock<IWineRepository> _mockRepository;
     private WinesController _controller;
+    private Mock<IWineRepository> _mockRepository;
 
     [SetUp]
     public void SetUp()
@@ -25,8 +25,8 @@ public class WinesControllerTests
         // Arrange
         var wines = new List<Wine>
         {
-            new Wine { Id = Guid.NewGuid(), Name = "Test Wine 1" },
-            new Wine { Id = Guid.NewGuid(), Name = "Test Wine 2" }
+            new() { Id = Guid.NewGuid(), Name = "Test Wine 1" },
+            new() { Id = Guid.NewGuid(), Name = "Test Wine 2" }
         };
         _mockRepository.Setup(repo => repo.GetAllAsync()).ReturnsAsync(wines);
 
@@ -173,7 +173,8 @@ public class WinesControllerTests
         var updatedWine = new Wine { Id = wineId, Name = "Updated Wine" };
 
         _mockRepository.Setup(repo => repo.GetByIdAsync(wineId)).ReturnsAsync(existingWine);
-        _mockRepository.Setup(repo => repo.UpdateAsync(updatedWine)).ThrowsAsync(new InvalidOperationException("simulated"));
+        _mockRepository.Setup(repo => repo.UpdateAsync(updatedWine))
+            .ThrowsAsync(new InvalidOperationException("simulated"));
 
         // Act
         var result = await _controller.UpdateWine(wineId, updatedWine);
