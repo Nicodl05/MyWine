@@ -1,7 +1,5 @@
 # 🍷 MyWine - Application de Gestion de Cave à Vin
 
-[![CI/CD Pipeline](https://github.com/VOTRE-USERNAME/MyWine/actions/workflows/ci.yml/badge.svg)](https://github.com/VOTRE-USERNAME/MyWine/actions/workflows/ci.yml)
-
 ## Description
 Application de gestion et suivi de cave à vin avec scraping de prix et recommandations personnalisées.
 
