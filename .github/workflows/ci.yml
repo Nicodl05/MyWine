@@ -38,24 +38,24 @@ jobs:
     steps:
       - name: Check all jobs status
         run: |
-          echo "🔍 Checking job results:"
+          echo "Checking job results:"
           echo "  Build and Test: ${{ needs.build-and-test.result }}"
           echo "  Code Quality: ${{ needs.code-quality.result }}"
           echo "  Security: ${{ needs.security.result }}"
 
           if [[ "${{ needs.build-and-test.result }}" != "success" ]]; then
-            echo "❌ Build and test failed!"
+            echo "Build and test failed!"
             exit 1
           fi
 
           if [[ "${{ needs.code-quality.result }}" != "success" ]]; then
-            echo "❌ Code quality checks failed!"
+            echo "Code quality checks failed!"
             exit 1
           fi
 
           if [[ "${{ needs.security.result }}" != "success" ]]; then
-            echo "❌ Security scan failed!"
+            echo "Security scan failed!"
             exit 1
           fi
 
-          echo "✅ All quality checks passed!"
+          echo "All quality checks passed!"

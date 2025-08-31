@@ -1,50 +1,57 @@
-# 🍷 MyWine - Application de Gestion de Cave à Vin
+# MyWine - Wine Cellar Management Application
 
 [![CI/CD Pipeline](https://github.com/VOTRE-USERNAME/MyWine/actions/workflows/ci.yml/badge.svg)](https://github.com/VOTRE-USERNAME/MyWine/actions/workflows/ci.yml)
 
 ## Description
-Application de gestion et suivi de cave à vin avec scraping de prix et recommandations personnalisées.
+
+Wine cellar management and tracking application with price scraping and personalized recommendations.
 
 ## Architecture
-- **Backend**: .NET 8 Web API
-- **Frontend**: À venir (React/Angular/Vue.js)
-- **Base de données**: PostgreSQL (à venir)
-- **Tests**: xUnit avec Moq
 
-## Structure du projet
-```
+- **Backend**: .NET 8 Web API
+- **Frontend**: Coming soon (React/Angular/Vue.js)
+- **Database**: PostgreSQL (coming soon)
+- **Tests**: xUnit with Moq
+
+## Project structure
+
+```text
 MyWine/
 ├── src/
-│   ├── WineCellar.Api/          # API Web
-│   ├── WineCellar.Core/         # Entités et interfaces
-│   └── WineCellar.Infrastructure/ # Repositories et services
+│   ├── WineCellar.Api/          # Web API
+│   ├── WineCellar.Core/         # Entities and interfaces
+│   └── WineCellar.Infrastructure/ # Repositories and services
 ├── tests/
-│   └── WineCellar.Tests/        # Tests unitaires
+│   └── WineCellar.Tests/        # Unit tests
 └── .github/workflows/           # GitHub Actions
 ```
 
-## Commandes utiles
+## Useful commands
+
 ```bash
-# Build du projet
+# Build the project
 dotnet build
 
-# Lancer les tests
+# Run tests
 dotnet test
 
-# Lancer l'API
+# Run the API
 dotnet run --project src/WineCellar.Api
 ```
 
-## Fonctionnalités
-- ✅ CRUD des bouteilles de vin
-- ✅ Système de notation (0-100)
-- ✅ Calcul de la valeur totale de la cave
-- 🔄 Scraping des prix (en cours)
-- 🔄 Recommandations personnalisées (en cours)
+## Features
+
+- CRUD for wine bottles
+- Rating system (0-100)
+- Calculate total cellar value
+- Price scraping (in progress)
+- Personalized recommendations (in progress)
 
 ## CI/CD
-Le pipeline GitHub Actions s'exécute sur chaque push et pull request :
-- ✅ Build de la solution
-- ✅ Exécution des tests unitaires
-- ✅ Vérification de la qualité du code
-- ❌ Blocage des merges si les tests échouent
+
+The GitHub Actions pipeline runs on each push and pull request:
+
+- Build the solution
+- Run unit tests
+- Verify code quality
+- Block merges if tests fail

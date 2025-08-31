@@ -2,14 +2,14 @@
 Briefly describe the changes and context.
 
 ## Type of change
-- [ ] 🐛 Bug fix (non-breaking change)
-- [ ] ✨ New feature (non-breaking addition)
-- [ ] 💥 Breaking change (fix or feature causing breaking change)
-- [ ] 📚 Documentation only
-- [ ] 🔧 Refactoring (no functional changes)
-- [ ] ✅ Tests (adding or fixing tests)
-- [ ] 🎨 Style (formatting, variable names, etc.)
-- [ ] ⚡ Performance (performance improvements)
+- [ ] Bug fix (non-breaking change)
+- [ ] New feature (non-breaking addition)
+- [ ] Breaking change (fix or feature causing breaking change)
+- [ ] Documentation only
+- [ ] Refactoring (no functional changes)
+- [ ] Tests (adding or fixing tests)
+- [ ] Style (formatting, variable names, etc.)
+- [ ] Performance (performance improvements)
 
 ## Changes
 - [ ] Change 1
@@ -20,7 +20,7 @@ Briefly describe the changes and context.
 - [ ] Unit tests added/updated
 - [ ] Integration tests added/updated
 - [ ] Manual testing performed
-- [ ] Minimum coverage maintained (≥80%)
+- [ ] Minimum coverage maintained (>=80%)
 - [ ] All existing tests pass
 
 ## Security
