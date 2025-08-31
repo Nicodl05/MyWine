@@ -8,9 +8,13 @@ on:
         required: false
         type: number
         default: 80
+      coverage-percentage:
+        description: "Coverage percentage produced by build-test workflow"
+        required: false
+        type: number
 
 jobs:
-  check-coverage:
+  check-quality:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,51 +28,46 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Restore and build
+      - name: Install ReSharper Global Tools
         run: |
-          dotnet restore
-          dotnet build --configuration Release
-
-      - name: Run tests with coverage
-        run: |
-          dotnet test \
-            --configuration Release \
-            --no-build \
-            --verbosity normal \
-            --collect:"XPlat Code Coverage" \
-            --results-directory ./TestResults \
-            --logger trx \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-
-      - name: Install tools
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y jq bc
-          dotnet tool install --global dotnet-reportgenerator-globaltool || true
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+          dotnet tool install --global JetBrains.ReSharper.GlobalTools --version 2025.2.0.1 || true
+          export PATH="$HOME/.dotnet/tools:$PATH"
 
-      - name: Generate coverage summary
+      - name: Run cleanupcode (ReSharper CLT)
         run: |
-          reportgenerator \
-            -reports:"./TestResults/**/coverage.opencover.xml" \
-            -targetdir:"./CoverageReport" \
-            -reporttypes:JsonSummary \
-            -verbosity:Info
-
-      - name: Check coverage threshold
-        id: coverage
-        run: |
-          if [ -f "./CoverageReport/Summary.json" ]; then
-            COVERAGE=$(jq -r '.summary.linecoverage' ./CoverageReport/Summary.json)
-            echo "Current coverage: ${COVERAGE}%"
-            THRESHOLD=${{ inputs.coverage-threshold }}
-            if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
-              echo "Coverage ${COVERAGE}% is below threshold ${THRESHOLD}%"
-              exit 1
-            else
-              echo "Coverage ${COVERAGE}% meets threshold ${THRESHOLD}%"
-            fi
+          set -euo pipefail
+          export PATH="$HOME/.dotnet/tools:$PATH"
+          if command -v cleanupcode >/dev/null 2>&1; then
+            echo "Running cleanupcode on solution..."
+            cleanupcode WineCellar.sln || true
+          elif command -v jb >/dev/null 2>&1; then
+            echo "Running jb cleanupcode on solution..."
+            jb cleanupcode WineCellar.sln || true
           else
-            echo "No coverage summary found"
+            echo "ReSharper CLT not found. Please install JetBrains.ReSharper.GlobalTools."
             exit 1
+          fi
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Formatting changes detected by cleanupcode. Please run 'cleanupcode' locally and commit the changes."
+            git --no-pager status --porcelain
+            git --no-pager --no-color diff
+            exit 1
+          fi
+
+      - name: Verify coverage threshold (from build-test)
+        run: |
+          set -euo pipefail
+          THRESHOLD=${{ inputs.coverage-threshold }}
+          COVERAGE_INPUT=${{ inputs.coverage-percentage }}
+          if [ -z "${COVERAGE_INPUT}" ] || [ "${COVERAGE_INPUT}" = "null" ]; then
+            echo "No coverage value provided to code-quality. Ensure build-test provides coverage output."
+            exit 1
+          fi
+          echo "Current coverage (from build): ${COVERAGE_INPUT}%"
+          if (( $(echo "${COVERAGE_INPUT} < ${THRESHOLD}" | bc -l) )); then
+            echo "Coverage ${COVERAGE_INPUT}% is below threshold ${THRESHOLD}%"
+            exit 1
+          else
+            echo "Coverage ${COVERAGE_INPUT}% meets threshold ${THRESHOLD}%"
           fi

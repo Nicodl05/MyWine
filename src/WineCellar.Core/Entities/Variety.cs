@@ -22,6 +22,5 @@ public enum Variety
     Marsanne,
     Roussanne,
     CheninBlanc,
-    Gamay,
-
+    Gamay
 }
