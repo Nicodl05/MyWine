@@ -73,17 +73,10 @@ jobs:
           if [ -f "./CoverageReport/Summary.json" ]; then
             COVERAGE=$(jq -r '.summary.linecoverage' ./CoverageReport/Summary.json)
             echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
-<<<<<<< HEAD
-              echo "Coverage: $COVERAGE%"
-          else
-            echo "percentage=0" >> $GITHUB_OUTPUT
-              echo "No coverage report found"
-=======
             echo "Coverage: $COVERAGE%"
           else
             echo "percentage=0" >> $GITHUB_OUTPUT
             echo "No coverage report found"
->>>>>>> 10e7201 (feat: streamline CI/CD workflows by removing code quality checks and enhancing security audits)
           fi
 
       # Upload artifacts for debugging and retention
@@ -111,15 +104,6 @@ jobs:
             echo "Test results available in ./TestResults"
 
             if find ./TestResults -name "*.trx" -exec grep -l "outcome=\"Failed\"" {} \; | grep -q .; then
-<<<<<<< HEAD
-                echo "Some tests failed!"
-              exit 1
-            else
-                echo "All tests passed!"
-            fi
-          else
-              echo "No test results found!"
-=======
               echo "Some tests failed"
               exit 1
             else
@@ -127,6 +111,5 @@ jobs:
             fi
           else
             echo "No test results found"
->>>>>>> 10e7201 (feat: streamline CI/CD workflows by removing code quality checks and enhancing security audits)
             exit 1
           fi

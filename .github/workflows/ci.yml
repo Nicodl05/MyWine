@@ -1,15 +1,24 @@
 name: CI Pipeline
 
-# Trigger pipeline on push and pull request to any branch
+# Trigger pipeline on any push or pull request
 on:
-  push:
-    branches: ["**"]
-  pull_request:
-    branches: ["**"]
+  push: {}
+  pull_request: {}
 
 # Shared environment (kept for future use)
 env:
   DOTNET_VERSION: "8.0.x"
+
+# Avoid duplicated runs for the same ref; cancel previous in-progress runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Minimal permissions for workflows
+permissions:
+  contents: read
+  actions: read
+  checks: write
 
 jobs:
   # Job that builds the solution and runs unit tests with coverage
@@ -18,54 +27,8 @@ jobs:
     uses: ./.github/workflows/build-test.yml
     secrets: inherit
 
-<<<<<<< HEAD
-  code-quality:
-    name: Code Quality
-    uses: ./.github/workflows/code-quality.yml
-    needs: build-and-test
-    secrets: inherit
-    with:
-      coverage-threshold: 80
-      coverage-percentage: ${{ needs.build-and-test.outputs['coverage-percentage'] }}
-
-=======
   # Job that runs lightweight security checks (CodeQL, package audit, etc.)
->>>>>>> 10e7201 (feat: streamline CI/CD workflows by removing code quality checks and enhancing security audits)
   security:
     name: Security Scan
     uses: ./.github/workflows/security.yml
     secrets: inherit
-<<<<<<< HEAD
-
-  quality-gate:
-    name: Quality Gate
-    runs-on: ubuntu-latest
-    needs: [build-and-test, code-quality, security]
-    if: always()
-
-    steps:
-      - name: Check all jobs status
-        run: |
-          echo "Checking job results:"
-          echo "  Build and Test: ${{ needs.build-and-test.result }}"
-          echo "  Code Quality: ${{ needs.code-quality.result }}"
-          echo "  Security: ${{ needs.security.result }}"
-
-          if [[ "${{ needs.build-and-test.result }}" != "success" ]]; then
-            echo "Build and test failed!"
-            exit 1
-          fi
-
-          if [[ "${{ needs.code-quality.result }}" != "success" ]]; then
-            echo "Code quality checks failed!"
-            exit 1
-          fi
-
-          if [[ "${{ needs.security.result }}" != "success" ]]; then
-            echo "Security scan failed!"
-            exit 1
-          fi
-
-          echo "All quality checks passed!"
-=======
->>>>>>> 10e7201 (feat: streamline CI/CD workflows by removing code quality checks and enhancing security audits)

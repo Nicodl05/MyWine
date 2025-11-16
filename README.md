@@ -47,18 +47,9 @@ dotnet run --project src/WineCellar.Api
 
 ## CI/CD
 
-The GitHub Actions pipeline runs on each push and pull request:
+The GitHub Actions pipeline runs on each push and pull request and includes the following checks:
 
 - Build the solution
 - Run unit tests
-- Verify code quality
-- Block merges if tests fail
-
-## Dependency updates (Renovate)
-
-This repository uses Renovate to keep dependencies up to date.
-
-- Configuration: `.github/renovate.json`
-- Workflow: `.github/workflows/renovate.yml`
-
-Renovate runs on a weekly schedule and can be triggered manually from the Actions tab (select the "Renovate" workflow and click "Run workflow").
+- Run security checks (lightweight audits)
+- Block merges if checks fail
