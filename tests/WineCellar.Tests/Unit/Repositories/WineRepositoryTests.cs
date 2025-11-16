@@ -1,6 +1,6 @@
-using NUnit.Framework;
 using WineCellar.Core.Entities;
 using WineCellar.Infrastructure.Repositories;
+using NUnit.Framework;
 
 namespace WineCellar.Tests.Unit.Repositories;
 
@@ -50,7 +50,7 @@ public class InMemoryWineRepositoryTests
             Producer = "Producer",
             Notes = new List<Note>
             {
-                new() { Reviewer = "John Doe", Score = 85 }
+                new Note { Reviewer = "John Doe", Score = 85 }
             }
         };
 
@@ -145,7 +145,7 @@ public class InMemoryWineRepositoryTests
             Type = "White",
             EstimatedPrice = 30.00m,
             Quantity = 2,
-            Notes = new List<Note> { new() { Reviewer = "Tester", Score = 90 } }
+            Notes = new List<Note> { new Note { Reviewer = "Tester", Score = 90 } }
         };
 
         // Act
@@ -175,7 +175,7 @@ public class InMemoryWineRepositoryTests
 
         // Act & Assert
         Assert.That(async () => await _repository.UpdateAsync(nonExistentWine),
-            Throws.TypeOf<InvalidOperationException>());
+                   Throws.TypeOf<InvalidOperationException>());
     }
 
     [Test]

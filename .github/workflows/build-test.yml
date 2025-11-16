@@ -1,17 +1,13 @@
 name: Build and Test
 
+# Minimal reusable workflow that only runs unit tests. Coverage generation and
+# report steps removed to keep CI fast and focused on test results.
 on:
   workflow_call:
-    outputs:
-      coverage-percentage:
-        description: "Coverage percentage"
-        value: ${{ jobs.build-test.outputs['coverage-percentage'] }}
 
 jobs:
-  build-test:
+  run-tests:
     runs-on: ubuntu-latest
-    outputs:
-      coverage-percentage: ${{ steps.coverage.outputs.percentage }}
 
     steps:
       - name: Checkout code
@@ -36,51 +32,18 @@ jobs:
       - name: Build solution
         run: dotnet build --configuration Release --no-restore
 
-      - name: Run unit tests with coverage
+      - name: Run unit tests
         run: |
           dotnet test \
             --configuration Release \
             --no-build \
             --verbosity normal \
-            --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
-            --logger trx \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-
-      - name: Install ReportGenerator
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
-
-      - name: Generate coverage report
-        run: |
-          reportgenerator \
-            -reports:"./TestResults/**/coverage.opencover.xml" \
-            -targetdir:"./CoverageReport" \
-            -reporttypes:"Html;TextSummary;Cobertura;JsonSummary" \
-            -verbosity:Info
-
-      - name: Extract coverage percentage
-        id: coverage
-        run: |
-          if [ -f "./CoverageReport/Summary.json" ]; then
-            COVERAGE=$(jq -r '.summary.linecoverage' ./CoverageReport/Summary.json)
-            echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
-              echo "Coverage: $COVERAGE%"
-          else
-            echo "percentage=0" >> $GITHUB_OUTPUT
-              echo "No coverage report found"
-          fi
-
-      - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage-report-${{ github.sha }}
-          path: ./CoverageReport/
-          retention-days: 30
+            --logger trx
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ github.sha }}
           path: ./TestResults/
@@ -90,16 +53,15 @@ jobs:
         if: always()
         run: |
           if [ -d "./TestResults" ]; then
-            echo "📋 Test results found:"
-            find ./TestResults -name "*.trx" -exec echo "  Found: {}" \;
-            
+            echo "Test results available in ./TestResults"
+
             if find ./TestResults -name "*.trx" -exec grep -l "outcome=\"Failed\"" {} \; | grep -q .; then
-                echo "Some tests failed!"
+              echo "Some tests failed"
               exit 1
             else
-                echo "All tests passed!"
+              echo "All tests passed"
             fi
           else
-              echo "No test results found!"
+            echo "No test results found"
             exit 1
           fi

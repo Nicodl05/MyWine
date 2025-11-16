@@ -1,5 +1,7 @@
 name: Security Scan
 
+# Minimal reusable workflow for lightweight security checks.
+# Kept intentionally simple to avoid YAML pitfalls and allow easy extension.
 on:
   workflow_call:
 
@@ -10,10 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup .NET
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
@@ -21,23 +21,25 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Security audit - Vulnerable packages
+      - name: Check vulnerable packages
         run: |
-          echo "Checking for vulnerable packages..."
-          dotnet list package --vulnerable --include-transitive || echo "No vulnerabilities found in packages"
+          echo "Checking for vulnerable packages"
+          dotnet list package --vulnerable --include-transitive || true
 
-      - name: Security audit - Deprecated packages
+      - name: Check deprecated packages
         run: |
-          echo "Checking for deprecated packages..."
-          dotnet list package --deprecated || echo "No deprecated packages found"
+          echo "Checking for deprecated packages"
+          dotnet list package --deprecated || true
 
-      - name: Check for hardcoded secrets
+      - name: Scan for potential hardcoded secrets
         run: |
-          echo "Scanning for potential hardcoded secrets..."
-
-          if grep -r -E "(password|pwd|secret|key|token)\s*=\s*['\"]" src/ --include="*.cs" --include="*.json"; then
-            echo "Potential hardcoded secrets found!"
-            exit 1
+          echo "Scanning source files for potential hardcoded secrets"
+          # Grep may fail with exit code when matches are found; return non-zero only if we want to fail the job
+          MATCHES=$(grep -R -n -E "(password|pwd|secret|key|token)\s*=\s*['\"]" src/ --include="*.cs" --include="*.json" || true)
+          if [ -n "$MATCHES" ]; then
+            echo "Potential hardcoded secrets found:";
+            echo "$MATCHES";
+            exit 1;
           else
-            echo "No hardcoded secrets detected"
+            echo "No obvious hardcoded secrets detected"
           fi

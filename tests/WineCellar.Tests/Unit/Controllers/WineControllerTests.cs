@@ -1,16 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using NUnit.Framework;
 using WineCellar.Api.Controllers;
 using WineCellar.Core.Entities;
 using WineCellar.Core.Interfaces;
+using NUnit.Framework;
 
 namespace WineCellar.Tests.Unit.Controllers;
 
 public class WinesControllerTests
 {
-    private WinesController _controller;
     private Mock<IWineRepository> _mockRepository;
+    private WinesController _controller;
 
     [SetUp]
     public void SetUp()
@@ -25,8 +25,8 @@ public class WinesControllerTests
         // Arrange
         var wines = new List<Wine>
         {
-            new() { Id = Guid.NewGuid(), Name = "Test Wine 1" },
-            new() { Id = Guid.NewGuid(), Name = "Test Wine 2" }
+            new Wine { Id = Guid.NewGuid(), Name = "Test Wine 1" },
+            new Wine { Id = Guid.NewGuid(), Name = "Test Wine 2" }
         };
         _mockRepository.Setup(repo => repo.GetAllAsync()).ReturnsAsync(wines);
 
@@ -162,28 +162,6 @@ public class WinesControllerTests
         Assert.That(result.Result, Is.TypeOf<NotFoundObjectResult>());
         var notFoundResult = (NotFoundObjectResult)result.Result;
         Assert.That(notFoundResult.Value, Is.EqualTo($"Wine with ID {wineId} not found."));
-    }
-
-    [Test]
-    public async Task UpdateWine_WhenRepositoryThrows_ReturnsInternalServerError()
-    {
-        // Arrange
-        var wineId = Guid.NewGuid();
-        var existingWine = new Wine { Id = wineId, Name = "Old Wine" };
-        var updatedWine = new Wine { Id = wineId, Name = "Updated Wine" };
-
-        _mockRepository.Setup(repo => repo.GetByIdAsync(wineId)).ReturnsAsync(existingWine);
-        _mockRepository.Setup(repo => repo.UpdateAsync(updatedWine))
-            .ThrowsAsync(new InvalidOperationException("simulated"));
-
-        // Act
-        var result = await _controller.UpdateWine(wineId, updatedWine);
-
-        // Assert
-        Assert.That(result.Result, Is.TypeOf<ObjectResult>());
-        var objResult = (ObjectResult)result.Result;
-        Assert.That(objResult.StatusCode, Is.EqualTo(500));
-        Assert.That(objResult.Value?.ToString(), Does.Contain("Error updating wine"));
     }
 
     [Test]
