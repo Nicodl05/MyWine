@@ -1,31 +1,23 @@
 name: Build and Test
 
-# This workflow is intended to be called by the main pipeline.
+# Minimal reusable workflow that only runs unit tests. Coverage generation and
+# report steps removed to keep CI fast and focused on test results.
 on:
   workflow_call:
-    outputs:
-      coverage-percentage:
-        description: "Coverage percentage"
-        value: ${{ jobs.build-test.outputs['coverage-percentage'] }}
 
 jobs:
-  build-test:
+  run-tests:
     runs-on: ubuntu-latest
-    outputs:
-      coverage-percentage: ${{ steps.coverage.outputs.percentage }}
 
     steps:
-      # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Setup .NET SDK
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
 
-      # Cache NuGet packages to speed up CI
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
@@ -34,69 +26,29 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      # Restore and build the solution
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build solution
         run: dotnet build --configuration Release --no-restore
 
-      # Run unit tests and collect code coverage in opencover format
-      - name: Run unit tests with coverage
+      - name: Run unit tests
         run: |
           dotnet test \
             --configuration Release \
             --no-build \
             --verbosity normal \
-            --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
-            --logger trx \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-
-      # Install ReportGenerator for generating human-friendly reports
-      - name: Install ReportGenerator
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
-
-      # Generate coverage reports in multiple formats
-      - name: Generate coverage report
-        run: |
-          reportgenerator \
-            -reports:"./TestResults/**/coverage.opencover.xml" \
-            -targetdir:"./CoverageReport" \
-            -reporttypes:"Html;TextSummary;Cobertura;JsonSummary" \
-            -verbosity:Info
-
-      # Extract coverage percentage from JSON summary and publish as job output
-      - name: Extract coverage percentage
-        id: coverage
-        run: |
-          if [ -f "./CoverageReport/Summary.json" ]; then
-            COVERAGE=$(jq -r '.summary.linecoverage' ./CoverageReport/Summary.json)
-            echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
-            echo "Coverage: $COVERAGE%"
-          else
-            echo "percentage=0" >> $GITHUB_OUTPUT
-            echo "No coverage report found"
-          fi
-
-      # Upload artifacts for debugging and retention
-      - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage-report-${{ github.sha }}
-          path: ./CoverageReport/
-          retention-days: 30
+            --logger trx
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ github.sha }}
           path: ./TestResults/
           retention-days: 30
 
-      # Fail the job when test outcomes include failures; keep messaging concise
       - name: Check test results
         if: always()
         run: |
