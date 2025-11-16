@@ -52,4 +52,4 @@ The GitHub Actions pipeline runs on each push and pull request and includes the 
 - Build the solution
 - Run unit tests
 - Run security checks (lightweight audits)
-- Block merges if checks fail
+- Merges are blocked if any required checks fail (via GitHub branch protection rules)
