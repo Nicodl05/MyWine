@@ -5,13 +5,12 @@ on:
   push: {}
   pull_request: {}
 
-# Shared environment (kept for future use)
 env:
   DOTNET_VERSION: "8.0.x"
 
 # Avoid duplicated runs for the same ref; cancel previous in-progress runs
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
 
 # Minimal permissions for workflows
@@ -21,14 +20,10 @@ permissions:
   checks: write
 
 jobs:
-  # Job that builds the solution and runs unit tests with coverage
   build-and-test:
-    name: Build and Test
+    # Reusable workflow: builds and runs unit tests with coverage
     uses: ./.github/workflows/build-test.yml
-    secrets: inherit
 
-  # Job that runs lightweight security checks (CodeQL, package audit, etc.)
   security:
-    name: Security Scan
+    # Reusable workflow: lightweight security scans
     uses: ./.github/workflows/security.yml
-    secrets: inherit
