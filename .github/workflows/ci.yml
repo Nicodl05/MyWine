@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   build-and-test:
-    # Reusable workflow: builds and runs unit tests with coverage
+    # Reusable workflow: builds and runs unit tests
     uses: ./.github/workflows/build-test.yml
 
   security:
