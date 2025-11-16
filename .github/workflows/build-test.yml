@@ -1,5 +1,6 @@
 name: Build and Test
 
+# This workflow is intended to be called by the main pipeline.
 on:
   workflow_call:
     outputs:
@@ -14,14 +15,17 @@ jobs:
       coverage-percentage: ${{ steps.coverage.outputs.percentage }}
 
     steps:
+      # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Setup .NET SDK
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
 
+      # Cache NuGet packages to speed up CI
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
@@ -30,12 +34,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
+      # Restore and build the solution
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build solution
         run: dotnet build --configuration Release --no-restore
 
+      # Run unit tests and collect code coverage in opencover format
       - name: Run unit tests with coverage
         run: |
           dotnet test \
@@ -47,9 +53,11 @@ jobs:
             --logger trx \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
+      # Install ReportGenerator for generating human-friendly reports
       - name: Install ReportGenerator
         run: dotnet tool install --global dotnet-reportgenerator-globaltool
 
+      # Generate coverage reports in multiple formats
       - name: Generate coverage report
         run: |
           reportgenerator \
@@ -58,18 +66,27 @@ jobs:
             -reporttypes:"Html;TextSummary;Cobertura;JsonSummary" \
             -verbosity:Info
 
+      # Extract coverage percentage from JSON summary and publish as job output
       - name: Extract coverage percentage
         id: coverage
         run: |
           if [ -f "./CoverageReport/Summary.json" ]; then
             COVERAGE=$(jq -r '.summary.linecoverage' ./CoverageReport/Summary.json)
             echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+<<<<<<< HEAD
               echo "Coverage: $COVERAGE%"
           else
             echo "percentage=0" >> $GITHUB_OUTPUT
               echo "No coverage report found"
+=======
+            echo "Coverage: $COVERAGE%"
+          else
+            echo "percentage=0" >> $GITHUB_OUTPUT
+            echo "No coverage report found"
+>>>>>>> 10e7201 (feat: streamline CI/CD workflows by removing code quality checks and enhancing security audits)
           fi
 
+      # Upload artifacts for debugging and retention
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
         if: always()
@@ -86,14 +103,15 @@ jobs:
           path: ./TestResults/
           retention-days: 30
 
+      # Fail the job when test outcomes include failures; keep messaging concise
       - name: Check test results
         if: always()
         run: |
           if [ -d "./TestResults" ]; then
-            echo "📋 Test results found:"
-            find ./TestResults -name "*.trx" -exec echo "  Found: {}" \;
-            
+            echo "Test results available in ./TestResults"
+
             if find ./TestResults -name "*.trx" -exec grep -l "outcome=\"Failed\"" {} \; | grep -q .; then
+<<<<<<< HEAD
                 echo "Some tests failed!"
               exit 1
             else
@@ -101,5 +119,14 @@ jobs:
             fi
           else
               echo "No test results found!"
+=======
+              echo "Some tests failed"
+              exit 1
+            else
+              echo "All tests passed"
+            fi
+          else
+            echo "No test results found"
+>>>>>>> 10e7201 (feat: streamline CI/CD workflows by removing code quality checks and enhancing security audits)
             exit 1
           fi

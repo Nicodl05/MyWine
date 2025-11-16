@@ -1,5 +1,6 @@
 name: Security Scan
 
+# Workflow intended to run lightweight security checks. It can be called from the main pipeline.
 on:
   workflow_call:
 
@@ -8,11 +9,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout full repository history for scanning tools if needed
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Setup .NET SDK for `dotnet list package` checks
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -21,18 +24,30 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
+      # Check for known vulnerable packages (includes transitive dependencies)
       - name: Security audit - Vulnerable packages
         run: |
+<<<<<<< HEAD
           echo "Checking for vulnerable packages..."
+=======
+          echo "Checking for vulnerable packages"
+>>>>>>> 10e7201 (feat: streamline CI/CD workflows by removing code quality checks and enhancing security audits)
           dotnet list package --vulnerable --include-transitive || echo "No vulnerabilities found in packages"
 
+      # Check for deprecated packages
       - name: Security audit - Deprecated packages
         run: |
+<<<<<<< HEAD
           echo "Checking for deprecated packages..."
+=======
+          echo "Checking for deprecated packages"
+>>>>>>> 10e7201 (feat: streamline CI/CD workflows by removing code quality checks and enhancing security audits)
           dotnet list package --deprecated || echo "No deprecated packages found"
 
-      - name: Check for hardcoded secrets
+      # Simple grep-based scan for potential hardcoded secrets in source files
+      - name: Check for potential hardcoded secrets
         run: |
+<<<<<<< HEAD
           echo "Scanning for potential hardcoded secrets..."
 
           if grep -r -E "(password|pwd|secret|key|token)\s*=\s*['\"]" src/ --include="*.cs" --include="*.json"; then
@@ -40,4 +55,13 @@ jobs:
             exit 1
           else
             echo "No hardcoded secrets detected"
+=======
+          echo "Scanning source files for potential hardcoded secrets"
+
+          if grep -R -n -E "(password|pwd|secret|key|token)\s*=\s*['\"]" src/ --include="*.cs" --include="*.json"; then
+            echo "Potential hardcoded secrets found"
+            exit 1
+          else
+            echo "No obvious hardcoded secrets detected"
+>>>>>>> 10e7201 (feat: streamline CI/CD workflows by removing code quality checks and enhancing security audits)
           fi
